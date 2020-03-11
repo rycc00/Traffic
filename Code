@@ -1,0 +1,73 @@
+// PROJEKT 1
+// AMPEL MIT ANFORDERUNGSSCHALTER UND SERIELLER ANZEIGE
+
+int ledPins[10] = {11, 10, 9, 8, 7, 6, 5, 4, 3, 2};
+
+int button1pin = 12;
+int button2pin = 13;
+
+int ampelphasen[6][10] = {
+  {0, 0, 1, 0, 1, 1, 0, 0, 1, 0},
+  {0, 1, 0, 1, 0, 1, 0, 0, 1, 0},
+  {1, 0, 0, 1, 0, 1, 1, 0, 1, 0},  
+  {1, 0, 0, 1, 0, 0, 0, 1, 0, 1}, 
+  {1, 0, 0, 1, 0, 0, 1, 0, 1, 0},  
+  {1, 1, 0, 1, 0, 1, 0, 0, 1, 0},  
+};
+
+int wartezeiten[6] = {15000, 5000, 2000, 15000, 5000, 2000};
+
+int myState = 0;
+long Timer = 0;
+long Timeout = 0;
+
+void setup() {
+  for (int i = 0; i < 10; i++) {     
+          pinMode(ledPins[i], OUTPUT);
+    }
+
+    pinMode(button1pin, INPUT_PULLUP);
+    pinMode(button2pin, INPUT_PULLUP);
+    Serial.begin(9600);
+    Serial.println ("###############################");
+    Serial.println ("### AUSGABE VON AMPELPHASEN ###");
+    Serial.println ("####################YR324######");
+    Serial.println ();
+  }
+
+void zeigeAmpelphase() {
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(ledPins[i], ampelphasen[myState][i]);
+  }
+}
+
+void loop() {
+
+  if (Timer + Timeout < millis()) {
+    Timer = millis();
+    myState++;
+    if (myState >= 6) myState = 0;
+    Timeout = wartezeiten[myState];
+    zeigeAmpelphase();
+    Serial.print ("## PHASE ");
+    Serial.print (myState);
+    Serial.print (":         ");
+      for (int i = 0; i<10; i++) {
+        Serial.print (ampelphasen[myState][i]);
+          Serial.print (" ");
+      }
+    Serial.println ("");
+    Serial.println ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+  }
+
+  if ((digitalRead(button1pin) == LOW) && (myState == 0)) {
+    Timer = millis();
+    Timeout = 200;
+  }
+  if ((digitalRead(button2pin) == LOW) && (myState == 3)) {
+    Timer = millis();
+    Timeout = 200;
+  }
+
+  delay(10);
+}
